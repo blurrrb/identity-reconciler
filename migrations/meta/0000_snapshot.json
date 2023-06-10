@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "d37c433c-744a-4b52-a9d9-2589179ac299",
+  "id": "5945876b-a890-4f1b-8f0e-a83d7f482d88",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "contacts": {
@@ -14,8 +14,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "phoneNumber": {
-          "name": "phoneNumber",
+        "phone_number": {
+          "name": "phone_number",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -26,40 +26,55 @@
           "primaryKey": false,
           "notNull": false
         },
-        "linkedId": {
-          "name": "linkedId",
+        "linked_id": {
+          "name": "linked_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "linkPrecedence": {
-          "name": "linkPrecedence",
+        "link_precedence": {
+          "name": "link_precedence",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
-        "deletedAt": {
-          "name": "deletedAt",
+        "deleted_at": {
+          "name": "deleted_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "email_idx": {
+          "name": "email_idx",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        },
+        "phone_number_idx": {
+          "name": "phone_number_idx",
+          "columns": [
+            "phone_number"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {}
     }
