@@ -1,5 +1,5 @@
 name = "identity-reconciler"
-main = "src/worker.ts"
+main = "src/cmd/worker.ts"
 compatibility_date = "2023-06-10"
 
 # # KV Namespace binding - For more information: https://developers.cloudflare.com/workers/runtime-apis/kv
