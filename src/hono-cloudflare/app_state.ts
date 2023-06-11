@@ -3,7 +3,7 @@ import {
   DrizzleContactsRepo,
   DrizzleLinkContactsUnitOfWork,
 } from "../drizzle/contacts";
-import { NewNeonPostgres } from "../drizzle/store";
+import { NewNeonPostgres, NewNodePostgress } from "../drizzle/store";
 import { ReconciliationService } from "../reconciliation";
 import Env from "./env";
 import Variables from "./variables";
@@ -21,15 +21,24 @@ export const middleware: MiddlewareHandler<{
   Variables: Variables;
 }> = async (c, next) => {
   if (!globalAppState) {
+    console.log("app state is empty, constructing app state");
     globalAppState = await constructAppState(c.env);
   }
 
+  console.log("setting app state");
   c.set("APP_STATE", globalAppState);
   await next();
 };
 
 async function constructAppState(env: Env): Promise<AppState> {
-  const db = await NewNeonPostgres(env.DATABASE_URL);
+  let db;
+  if (env.APP_MODE === "prod") {
+    db = await NewNeonPostgres(env.DATABASE_URL);
+  } else {
+    db = await NewNodePostgress(env.DATABASE_URL);
+  }
+  console.log("db connection established");
+
   const repo = new DrizzleContactsRepo(db);
 
   const uow = new DrizzleLinkContactsUnitOfWork(db, repo);
