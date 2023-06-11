@@ -1,7 +1,11 @@
 import { Hono } from "hono";
+import { middleware } from "./app_state";
+import { identify } from "./controller";
 import Bindings from "./env";
-const router = new Hono<{ Bindings: Bindings }>();
+import Variables from "./variables";
 
-router.get("/", (c) => c.text("Hello Cloudflare Workers!"));
+const router = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+  .use("*", middleware)
+  .post("/", identify);
 
 export default router;
