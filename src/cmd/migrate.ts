@@ -1,18 +1,21 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Client } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 
 import config from "../../drizzle.config";
-import { exit } from "process";
 
 if (!config.connectionString) {
   throw new Error("DATABASE_URL not defined");
 }
 
-const sql = postgres(config.connectionString, { max: 1 });
-const db = drizzle(sql);
-
 (async () => {
+  const client = new Client({ connectionString: config.connectionString });
+  await client.connect();
+
+  const db = drizzle(client);
+
   await migrate(db, { migrationsFolder: config.out });
-  exit(0);
+  console.log("done migrating");
+
+  await client.end();
 })();
