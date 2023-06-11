@@ -185,7 +185,7 @@ export class DrizzleContactsRepo implements ContactsRepo {
     const fetchedContacts = await db
       .with(subQuery)
       .select()
-      .from(contacts)
+      .from(contacts, subQuery)
       .where(filterClause)
       .for("update");
 
