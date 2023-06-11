@@ -24,7 +24,7 @@ export class ReconciliationService {
   ): Promise<ReconciliationResponse> {
     if (email && phoneNumber) {
       return formatResponse(
-        await this.linkContactsUnitOfWork.linkContacts({ email, phoneNumber })
+        await this.linkContactsUnitOfWork.linkContacts(email, phoneNumber)
       );
     }
 

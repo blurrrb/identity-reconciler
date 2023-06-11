@@ -3,7 +3,6 @@ import {
   Contact,
   ContactsRepo,
   LinkContactsUnitOfWork,
-  LinkingRequest,
   LinkingResponse,
   NewContact,
 } from "../contacts";
@@ -345,10 +344,10 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
     this.drizzleContactsRepo = drizzleContactsRepo;
   }
 
-  async linkContacts({
-    email,
-    phoneNumber,
-  }: LinkingRequest): Promise<LinkingResponse> {
+  async linkContacts(
+    email: string,
+    phoneNumber: string
+  ): Promise<LinkingResponse> {
     return await this.db.transaction(async (tx) => {
       const { primary, secondary } =
         await this.drizzleContactsRepo.getLinkedContactsForUpdateFromDB(

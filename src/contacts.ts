@@ -31,18 +31,16 @@ export interface ContactsRepo {
   linkToNewPrimary(newPrimary: Contact, contact: Contact): Promise<void>;
 }
 
-export type LinkingRequest = {
-  email: string;
-  phoneNumber: string;
-};
-
 export type LinkingResponse = {
   primary: Contact;
   secondary: Contact[];
 };
 
 export interface LinkContactsUnitOfWork {
-  linkContacts: (linkingRequest: LinkingRequest) => Promise<LinkingResponse>;
+  linkContacts: (
+    email: string,
+    phoneNumber: string
+  ) => Promise<LinkingResponse>;
   linkContactsByEmail: (email: string) => Promise<LinkingResponse>;
   linkContactsByPhoneNumber: (phoneNumber: string) => Promise<LinkingResponse>;
 }
