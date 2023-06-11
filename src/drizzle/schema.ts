@@ -1,5 +1,7 @@
-import { InferModel } from "drizzle-orm";
+import { notEqual } from "assert";
+import { InferModel, eq, isNotNull, isNull, not } from "drizzle-orm";
 import {
+  index,
   integer,
   pgTable,
   serial,
@@ -23,8 +25,11 @@ export const contacts = pgTable(
     deletedAt: timestamp("deleted_at"),
   },
   (table) => ({
-    nameIdx: uniqueIndex("email_idx").on(table.email),
-    emailIdx: uniqueIndex("phone_number_idx").on(table.phoneNumber),
+    nameIdx: uniqueIndex("email_idx").on(table.email).concurrently(),
+    emailIdx: uniqueIndex("phone_number_idx")
+      .on(table.phoneNumber)
+      .concurrently(),
+    linkedIdIdx: index("linked_id_idx").on(table.linkedId),
   })
 );
 

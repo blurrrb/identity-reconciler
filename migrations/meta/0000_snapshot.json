@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "5945876b-a890-4f1b-8f0e-a83d7f482d88",
+  "id": "4c11d151-f400-425c-add5-c7aaa64dc3d2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "contacts": {
@@ -36,7 +36,7 @@
           "name": "link_precedence",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -73,6 +73,13 @@
             "phone_number"
           ],
           "isUnique": true
+        },
+        "linked_id_idx": {
+          "name": "linked_id_idx",
+          "columns": [
+            "linked_id"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
