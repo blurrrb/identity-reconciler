@@ -7,6 +7,6 @@ import Variables from "./variables";
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>()
   .use("*", middleware)
   .post("/identify", identify)
-  .get("/pong", ping);
+  .get("/ping", ping);
 
 export default router;
