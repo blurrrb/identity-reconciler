@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "4c11d151-f400-425c-add5-c7aaa64dc3d2",
+  "id": "186c1eeb-120d-4bab-a0cb-7aa62429da53",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "contacts": {
@@ -65,14 +65,14 @@
           "columns": [
             "email"
           ],
-          "isUnique": true
+          "isUnique": false
         },
         "phone_number_idx": {
           "name": "phone_number_idx",
           "columns": [
             "phone_number"
           ],
-          "isUnique": true
+          "isUnique": false
         },
         "linked_id_idx": {
           "name": "linked_id_idx",

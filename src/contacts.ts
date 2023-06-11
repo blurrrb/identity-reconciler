@@ -9,22 +9,31 @@ export type Contact = {
   deletedAt?: Date;
 };
 
+export type NewContact = {
+  phoneNumber?: string;
+  email?: string;
+  linkedId?: number;
+  linkPrecedence: "secondary" | "primary";
+};
+
 export interface ContactsRepo {
   getLinkedContactsByPhoneNumber(
     phoneNumber: string
-  ): Promise<[Contact[], Contact[]]>;
-  getLinkedContactsByEmail(email: string): Promise<[Contact[], Contact[]]>;
+  ): Promise<{ primary?: Contact; secondary: Contact[] }>;
+  getLinkedContactsByEmail(
+    email: string
+  ): Promise<{ primary?: Contact; secondary: Contact[] }>;
   getLinkedContacts(
     email: string,
     phoneNumber: string
-  ): Promise<[Contact[], Contact[]]>;
-  createContact(contact: Contact): Promise<number>;
+  ): Promise<{ primary: Contact[]; secondary: Contact[] }>;
+  createContact(NewContact: NewContact): Promise<Contact>;
   linkToNewPrimary(newPrimary: Contact, contact: Contact): Promise<void>;
 }
 
 export type LinkingRequest = {
-  email?: string;
-  phoneNumber?: string;
+  email: string;
+  phoneNumber: string;
 };
 
 export type LinkingResponse = {
@@ -33,5 +42,7 @@ export type LinkingResponse = {
 };
 
 export interface LinkContactsUnitOfWork {
-  linkContact: (linkingRequest: LinkingRequest) => Promise<LinkingResponse>;
+  linkContacts: (linkingRequest: LinkingRequest) => Promise<LinkingResponse>;
+  linkContactsByEmail: (email: string) => Promise<LinkingResponse>;
+  linkContactsByPhoneNumber: (phoneNumber: string) => Promise<LinkingResponse>;
 }
