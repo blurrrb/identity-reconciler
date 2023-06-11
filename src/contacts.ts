@@ -19,7 +19,7 @@ export interface ContactsRepo {
     phoneNumber: string
   ): Promise<[Contact[], Contact[]]>;
   createContact(contact: Contact): Promise<number>;
-  linkToNewPrimary(newPrimary: Contact, oldPrimary: Contact): Promise<void>;
+  linkToNewPrimary(newPrimary: Contact, contact: Contact): Promise<void>;
 }
 
 export type LinkingRequest = {

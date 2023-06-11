@@ -2,6 +2,8 @@ import { Client, Pool } from "@neondatabase/serverless";
 import { NeonDatabase, drizzle } from "drizzle-orm/neon-serverless";
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
 
+export type DB = NeonDatabase | NodePgDatabase;
+
 export async function NewNeonPostgres(
   databaseUrl: string
 ): Promise<NeonDatabase> {

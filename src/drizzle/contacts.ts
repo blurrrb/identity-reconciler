@@ -1,22 +1,22 @@
-import { NeonDatabase } from "drizzle-orm/neon-serverless";
 import { Contact, ContactsRepo } from "../contacts";
 import { contacts, Contact as schemaContact, NewContact } from "./schema";
 import { and, eq, or } from "drizzle-orm";
+import { DB } from "./store";
 export class DrizzleContactsRepo implements ContactsRepo {
-  db: NeonDatabase;
+  db: DB;
 
-  constructor(db: NeonDatabase) {
+  constructor(db: DB) {
     this.db = db;
   }
 
   async getLinkedContactsByPhoneNumber(
     phoneNumber: string
   ): Promise<[Contact[], Contact[]]> {
-    return this._getLinkedContactsByPhoneNumber(this.db, phoneNumber);
+    return this.getLinkedContactsByPhoneNumberFromDB(this.db, phoneNumber);
   }
 
-  async _getLinkedContactsByPhoneNumber(
-    db: NeonDatabase,
+  async getLinkedContactsByPhoneNumberFromDB(
+    db: DB,
     phoneNumber: string
   ): Promise<[Contact[], Contact[]]> {
     const { subQuery, filterClause } = this._linkedContactsByPhoneNumberQuery(
@@ -41,7 +41,7 @@ export class DrizzleContactsRepo implements ContactsRepo {
     return [primaryContacts, secondaryContacts];
   }
 
-  _linkedContactsByPhoneNumberQuery(db: NeonDatabase, phoneNumber: string) {
+  _linkedContactsByPhoneNumberQuery(db: DB, phoneNumber: string) {
     const subQuery = db
       .$with("phone_number_sub_query")
       .as(
@@ -65,8 +65,8 @@ export class DrizzleContactsRepo implements ContactsRepo {
     return { subQuery, filterClause };
   }
 
-  async _getLinkedContactsByPhoneNumberForUpdate(
-    db: NeonDatabase,
+  async getLinkedContactsByPhoneNumberForUpdateFromDB(
+    db: DB,
     phoneNumber: string
   ): Promise<[Contact[], Contact[]]> {
     const { subQuery, filterClause } = this._linkedContactsByPhoneNumberQuery(
@@ -95,11 +95,11 @@ export class DrizzleContactsRepo implements ContactsRepo {
   async getLinkedContactsByEmail(
     email: string
   ): Promise<[Contact[], Contact[]]> {
-    return this._getLinkedContactsByEmail(this.db, email);
+    return this.getLinkedContactsByEmailFromDB(this.db, email);
   }
 
-  async _getLinkedContactsByEmail(
-    db: NeonDatabase,
+  async getLinkedContactsByEmailFromDB(
+    db: DB,
     email: string
   ): Promise<[Contact[], Contact[]]> {
     const { subQuery, filterClause } = this._linkedContactsByEmailQuery(
@@ -124,7 +124,7 @@ export class DrizzleContactsRepo implements ContactsRepo {
     return [primaryContacts, secondaryContacts];
   }
 
-  _linkedContactsByEmailQuery(db: NeonDatabase, email: string) {
+  _linkedContactsByEmailQuery(db: DB, email: string) {
     const subQuery = db
       .$with("email_sub_query")
       .as(db.select().from(contacts).where(eq(contacts.email, email)));
@@ -146,8 +146,8 @@ export class DrizzleContactsRepo implements ContactsRepo {
     return { subQuery, filterClause };
   }
 
-  async _getLinkedContactsByEmailForUpdate(
-    db: NeonDatabase,
+  async getLinkedContactsByEmailForUpdateFromDB(
+    db: DB,
     email: string
   ): Promise<[Contact[], Contact[]]> {
     const { subQuery, filterClause } = this._linkedContactsByEmailQuery(
@@ -177,11 +177,11 @@ export class DrizzleContactsRepo implements ContactsRepo {
     email: string,
     phoneNumber: string
   ): Promise<[Contact[], Contact[]]> {
-    return this._getLinkedContacts(this.db, email, phoneNumber);
+    return this.getLinkedContactsFromDB(this.db, email, phoneNumber);
   }
 
-  async _getLinkedContacts(
-    db: NeonDatabase,
+  async getLinkedContactsFromDB(
+    db: DB,
     email: string,
     phoneNumber: string
   ): Promise<[Contact[], Contact[]]> {
@@ -210,8 +210,8 @@ export class DrizzleContactsRepo implements ContactsRepo {
     return [primaryContacts, secondaryContacts];
   }
 
-  async _getLinkedContactsForUpdate(
-    db: NeonDatabase,
+  async getLinkedContactsForUpdateFromDB(
+    db: DB,
     email: string,
     phoneNumber: string
   ): Promise<[Contact[], Contact[]]> {
@@ -242,10 +242,10 @@ export class DrizzleContactsRepo implements ContactsRepo {
   }
 
   async createContact(contact: Contact): Promise<number> {
-    return this._createContact(this.db, contact);
+    return this.createContactInDB(this.db, contact);
   }
 
-  async _createContact(db: NeonDatabase, contact: Contact): Promise<number> {
+  async createContactInDB(db: DB, contact: Contact): Promise<number> {
     const contactToInsert: NewContact = {
       email: contact.email,
       phoneNumber: contact.phoneNumber,
@@ -262,19 +262,36 @@ export class DrizzleContactsRepo implements ContactsRepo {
     return insertedId;
   }
 
-  async linkToNewPrimary(
-    newPrimary: Contact,
-    oldPrimary: Contact
-  ): Promise<void> {
-    return this._linkToNewPrimary(this.db, newPrimary, oldPrimary);
+  async linkToNewPrimary(newPrimary: Contact, contact: Contact): Promise<void> {
+    return this.linkToNewPrimaryInDB(this.db, newPrimary, contact);
   }
 
-  async _linkToNewPrimary(
-    _db: NeonDatabase,
-    _newPrimary: Contact,
-    _oldPrimary: Contact
+  async linkToNewPrimaryInDB(
+    db: DB,
+    newPrimary: Contact,
+    contact: Contact
   ): Promise<void> {
-    throw new Error("Method not implemented.");
+    let oldPrimaryId: number;
+    switch (contact.linkPrecedence) {
+      case "secondary":
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        oldPrimaryId = contact.linkedId!;
+        break;
+      case "primary":
+        oldPrimaryId = contact.id;
+        break;
+    }
+
+    await this.db
+      .update(contacts)
+      .set({
+        linkedId: newPrimary.id,
+        linkPrecedence: "secondary",
+        updatedAt: new Date(),
+      })
+      .where(
+        or(eq(contacts.id, oldPrimaryId), eq(contacts.linkedId, oldPrimaryId))
+      );
   }
 
   mapContact(obj: schemaContact): Contact {
