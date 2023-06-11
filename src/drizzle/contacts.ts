@@ -332,7 +332,9 @@ function getQueryForLinkedContacts(
   const subQuery = db.$with("sq").as(
     db
       .select({
-        id: sql<number>`DISTINCT(COALESCE(${contacts.linkedId}, ${contacts.id}))`,
+        sqId: sql<number>`DISTINCT(COALESCE(${contacts.linkedId}, ${contacts.id}))`.as(
+          "sq_id"
+        ),
       })
       .from(contacts)
       .where(subQueryClause)
