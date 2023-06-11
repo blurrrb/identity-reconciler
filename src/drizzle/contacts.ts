@@ -1,4 +1,4 @@
-import { and, eq, exists, or } from "drizzle-orm";
+import { SQL, eq, inArray, or, sql } from "drizzle-orm";
 import {
   Contact,
   ContactsRepo,
@@ -23,325 +23,36 @@ export class DrizzleContactsRepo implements ContactsRepo {
   async getLinkedContactsByPhoneNumber(
     phoneNumber: string
   ): Promise<{ primary?: Contact; secondary: Contact[] }> {
-    return this.getLinkedContactsByPhoneNumberFromDB(this.db, phoneNumber);
-  }
-
-  async getLinkedContactsByPhoneNumberFromDB(
-    db: DB,
-    phoneNumber: string
-  ): Promise<{ primary?: Contact; secondary: Contact[] }> {
-    const { subQuery, filterClause } = this._linkedContactsByPhoneNumberQuery(
-      db,
-      phoneNumber
-    );
-
-    const fetchedContacts = await db
-      .with(subQuery)
-      .select()
-      .from(contacts)
-      .where(filterClause);
-
-    const primaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "primary")
-      .map((c) => this.mapContact(c));
-
-    const primaryContact =
-      primaryContacts.length !== 0 ? primaryContacts[0] : undefined;
-
-    const secondaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "secondary")
-      .map((c) => this.mapContact(c));
-
-    return { primary: primaryContact, secondary: secondaryContacts };
-  }
-
-  _linkedContactsByPhoneNumberQuery(db: DB, phoneNumber: string) {
-    const baseSubQuery = db
-      .select()
-      .from(contacts)
-      .where(eq(contacts.phoneNumber, phoneNumber));
-
-    const subQuery = db.$with("phone_number_sub_query").as(baseSubQuery);
-
-    const filterClause = and(
-      exists(baseSubQuery),
-      or(
-        and(
-          eq(subQuery.linkPrecedence, "primary"),
-          or(eq(contacts.id, subQuery.id), eq(contacts.linkedId, subQuery.id))
-        ),
-        and(
-          eq(subQuery.linkPrecedence, "secondary"),
-          or(
-            eq(contacts.id, subQuery.linkedId),
-            eq(contacts.linkedId, subQuery.linkedId)
-          )
-        )
-      )
-    );
-
-    return { subQuery, filterClause };
-  }
-
-  async getLinkedContactsByPhoneNumberForUpdateFromDB(
-    db: DB,
-    phoneNumber: string
-  ): Promise<[Contact[], Contact[]]> {
-    const { subQuery, filterClause } = this._linkedContactsByPhoneNumberQuery(
-      db,
-      phoneNumber
-    );
-
-    const fetchedContacts = await db
-      .with(subQuery)
-      .select()
-      .from(contacts)
-      .where(filterClause)
-      .for("update");
-
-    const primaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "primary")
-      .map((c) => this.mapContact(c));
-
-    const secondaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "secondary")
-      .map((c) => this.mapContact(c));
-
-    return [primaryContacts, secondaryContacts];
+    return getLinkedContactsByPhoneNumber(this.db, phoneNumber);
   }
 
   async getLinkedContactsByEmail(
     email: string
   ): Promise<{ primary?: Contact; secondary: Contact[] }> {
-    return this.getLinkedContactsByEmailFromDB(this.db, email);
-  }
-
-  async getLinkedContactsByEmailFromDB(
-    db: DB,
-    email: string
-  ): Promise<{ primary?: Contact; secondary: Contact[] }> {
-    const { subQuery, filterClause } = this._linkedContactsByEmailQuery(
-      db,
-      email
-    );
-
-    const fetchedContacts = await db
-      .with(subQuery)
-      .select()
-      .from(contacts)
-      .where(filterClause);
-
-    const primaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "primary")
-      .map((c) => this.mapContact(c));
-
-    const primaryContact =
-      primaryContacts.length !== 0 ? primaryContacts[0] : undefined;
-
-    const secondaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "secondary")
-      .map((c) => this.mapContact(c));
-
-    return { primary: primaryContact, secondary: secondaryContacts };
-  }
-
-  _linkedContactsByEmailQuery(db: DB, email: string) {
-    const baseSubQuery = db
-      .select()
-      .from(contacts)
-      .where(eq(contacts.email, email));
-
-    const subQuery = db.$with("email_sub_query").as(baseSubQuery);
-
-    const filterClause = and(
-      exists(baseSubQuery),
-      or(
-        and(
-          eq(subQuery.linkPrecedence, "primary"),
-          or(eq(contacts.id, subQuery.id), eq(contacts.linkedId, subQuery.id))
-        ),
-        and(
-          eq(subQuery.linkPrecedence, "secondary"),
-          or(
-            eq(contacts.id, subQuery.linkedId),
-            eq(contacts.linkedId, subQuery.linkedId)
-          )
-        )
-      )
-    );
-
-    return { subQuery, filterClause };
-  }
-
-  async getLinkedContactsByEmailForUpdateFromDB(
-    db: DB,
-    email: string
-  ): Promise<[Contact[], Contact[]]> {
-    const { subQuery, filterClause } = this._linkedContactsByEmailQuery(
-      db,
-      email
-    );
-
-    const fetchedContacts = await db
-      .with(subQuery)
-      .select()
-      .from(contacts, subQuery)
-      .where(filterClause)
-      .for("update");
-
-    const primaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "primary")
-      .map((c) => this.mapContact(c));
-
-    const secondaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "secondary")
-      .map((c) => this.mapContact(c));
-
-    return [primaryContacts, secondaryContacts];
+    return getLinkedContactsByEmail(this.db, email);
   }
 
   async getLinkedContacts(
     email: string,
     phoneNumber: string
   ): Promise<{ primary: Contact[]; secondary: Contact[] }> {
-    return this.getLinkedContactsFromDB(this.db, email, phoneNumber);
-  }
-
-  async getLinkedContactsFromDB(
-    db: DB,
-    email: string,
-    phoneNumber: string
-  ): Promise<{ primary: Contact[]; secondary: Contact[] }> {
-    const { subQuery: emailSubQuery, filterClause: emailFilterClause } =
-      this._linkedContactsByEmailQuery(db, email);
-
-    const {
-      subQuery: phoneNumberSubQuery,
-      filterClause: phoneNumberFilterClause,
-    } = this._linkedContactsByPhoneNumberQuery(db, phoneNumber);
-
-    const fetchedContacts = await db
-      .with(emailSubQuery, phoneNumberSubQuery)
-      .select()
-      .from(contacts)
-      .where(or(emailFilterClause, phoneNumberFilterClause));
-
-    const primaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "primary")
-      .map((c) => this.mapContact(c));
-
-    const secondaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "secondary")
-      .map((c) => this.mapContact(c));
-
-    return { primary: primaryContacts, secondary: secondaryContacts };
-  }
-
-  async getLinkedContactsForUpdateFromDB(
-    db: DB,
-    email: string,
-    phoneNumber: string
-  ): Promise<{ primary: Contact[]; secondary: Contact[] }> {
-    const { subQuery: emailSubQuery, filterClause: emailFilterClause } =
-      this._linkedContactsByEmailQuery(db, email);
-
-    const {
-      subQuery: phoneNumberSubQuery,
-      filterClause: phoneNumberFilterClause,
-    } = this._linkedContactsByPhoneNumberQuery(db, phoneNumber);
-
-    const fetchedContacts = await db
-      .with(emailSubQuery, phoneNumberSubQuery)
-      .select()
-      .from(contacts)
-      .where(or(emailFilterClause, phoneNumberFilterClause))
-      .for("update");
-
-    const primaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "primary")
-      .map((c) => this.mapContact(c));
-
-    const secondaryContacts: Contact[] = fetchedContacts
-      .filter((c) => c.linkPrecedence === "secondary")
-      .map((c) => this.mapContact(c));
-
-    return { primary: primaryContacts, secondary: secondaryContacts };
+    return getLinkedContacts(this.db, email, phoneNumber);
   }
 
   async createContact(contact: Contact): Promise<Contact> {
-    return this.createContactInDB(this.db, contact);
-  }
-
-  async createContactInDB(db: DB, contact: NewContact): Promise<Contact> {
-    const now = new Date();
-    const contactToInsert: schemaNewContact = {
-      email: contact.email,
-      phoneNumber: contact.phoneNumber,
-      linkPrecedence: contact.linkPrecedence,
-      linkedId: contact.linkedId,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const insertedContact = await db
-      .insert(contacts)
-      .values(contactToInsert)
-      .returning();
-
-    return this.mapContact(insertedContact[0]);
+    return createContact(this.db, contact);
   }
 
   async linkToNewPrimary(newPrimary: Contact, contact: Contact): Promise<void> {
-    return this.linkToNewPrimaryInDB(this.db, newPrimary, contact);
-  }
-
-  async linkToNewPrimaryInDB(
-    db: DB,
-    newPrimary: Contact,
-    contact: Contact
-  ): Promise<void> {
-    let oldPrimaryId: number;
-    switch (contact.linkPrecedence) {
-      case "secondary":
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        oldPrimaryId = contact.linkedId!;
-        break;
-      case "primary":
-        oldPrimaryId = contact.id;
-        break;
-    }
-
-    await this.db
-      .update(contacts)
-      .set({
-        linkedId: newPrimary.id,
-        linkPrecedence: "secondary",
-        updatedAt: new Date(),
-      })
-      .where(
-        or(eq(contacts.id, oldPrimaryId), eq(contacts.linkedId, oldPrimaryId))
-      );
-  }
-
-  mapContact(obj: schemaContact): Contact {
-    return {
-      id: obj.id,
-      phoneNumber: obj.phoneNumber || undefined,
-      email: obj.email || undefined,
-      linkPrecedence: obj.linkPrecedence,
-      createdAt: obj.createdAt,
-      updatedAt: obj.updatedAt,
-      deletedAt: obj.deletedAt || undefined,
-    };
+    return linkToNewPrimary(this.db, newPrimary, contact);
   }
 }
 
 export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
   db: DB;
-  drizzleContactsRepo: DrizzleContactsRepo;
 
-  constructor(db: DB, drizzleContactsRepo: DrizzleContactsRepo) {
+  constructor(db: DB) {
     this.db = db;
-    this.drizzleContactsRepo = drizzleContactsRepo;
   }
 
   async linkContacts(
@@ -349,20 +60,18 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
     phoneNumber: string
   ): Promise<LinkingResponse> {
     return await this.db.transaction(async (tx) => {
-      const { primary, secondary } =
-        await this.drizzleContactsRepo.getLinkedContactsForUpdateFromDB(
-          tx,
-          email,
-          phoneNumber
-        );
+      const { primary, secondary } = await getLinkedContactsForUpdate(
+        tx,
+        email,
+        phoneNumber
+      );
 
       // if primary does not exist, this is an entirely new contact. save it
       if (primary.length === 0) {
-        const insertedContact =
-          await this.drizzleContactsRepo.createContactInDB(tx, {
-            email,
-            linkPrecedence: "primary",
-          });
+        const insertedContact = await createContact(tx, {
+          email,
+          linkPrecedence: "primary",
+        });
 
         return { primary: insertedContact, secondary: [] };
       }
@@ -375,7 +84,7 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
             ? [primary[0], primary[1]]
             : [primary[1], primary[0]];
 
-        this.drizzleContactsRepo.linkToNewPrimaryInDB(tx, older, younger);
+        linkToNewPrimary(tx, older, younger);
 
         younger.linkPrecedence = "secondary";
         younger.linkedId = older.id;
@@ -389,12 +98,7 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
 
       // if one primary exists, both email and phone can belong to the same cluster or one of them does not exist
       if (
-        this._containsBothEmailAndPhone(
-          primary[0],
-          secondary,
-          email,
-          phoneNumber
-        )
+        containsBothEmailAndPhone(primary[0], secondary, email, phoneNumber)
       ) {
         // no need to do anything, both exist
         return {
@@ -404,20 +108,13 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
       }
 
       // one of email or phoneNumber do not exist, create new and link others to new contact
-      const insertedContact = await this.drizzleContactsRepo.createContactInDB(
-        tx,
-        {
-          email,
-          phoneNumber,
-          linkPrecedence: "primary",
-        }
-      );
+      const insertedContact = await createContact(tx, {
+        email,
+        phoneNumber,
+        linkPrecedence: "primary",
+      });
 
-      await this.drizzleContactsRepo.linkToNewPrimaryInDB(
-        tx,
-        insertedContact,
-        primary[0]
-      );
+      await linkToNewPrimary(tx, insertedContact, primary[0]);
 
       primary[0].linkPrecedence = "secondary";
       primary[0].linkedId = insertedContact.id;
@@ -431,29 +128,11 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
     });
   }
 
-  _containsBothEmailAndPhone(
-    primary: Contact,
-    secondary: Contact[],
-    email: string,
-    phoneNumber: string
-  ): boolean {
-    return (
-      (primary.email === email ||
-        secondary.filter((c) => c.email === email).length !== 0) &&
-      (primary.phoneNumber === phoneNumber ||
-        secondary.filter((c) => c.phoneNumber === phoneNumber).length !== 0)
-    );
-  }
-
   async linkContactsByEmail(email: string): Promise<LinkingResponse> {
     return await this.db.transaction(async (tx) => {
-      const { primary, secondary } =
-        await this.drizzleContactsRepo.getLinkedContactsByEmailFromDB(
-          tx,
-          email
-        );
+      const { primary, secondary } = await getLinkedContactsByEmail(tx, email);
 
-      // if primary exists, this means that the email already exists in our db and we don not need to do any updates
+      // if primary exists, this means that the email already exists in our db and we dont not need to do any updates
       if (primary) {
         return {
           primary,
@@ -462,13 +141,10 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
       }
 
       // if primary does not exist, this is an entirely new contact. save it
-      const insertedContact = await this.drizzleContactsRepo.createContactInDB(
-        tx,
-        {
-          email,
-          linkPrecedence: "primary",
-        }
-      );
+      const insertedContact = await createContact(tx, {
+        email,
+        linkPrecedence: "primary",
+      });
 
       return { primary: insertedContact, secondary: [] };
     });
@@ -478,11 +154,10 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
     phoneNumber: string
   ): Promise<LinkingResponse> {
     return await this.db.transaction(async (tx) => {
-      const { primary, secondary } =
-        await this.drizzleContactsRepo.getLinkedContactsByPhoneNumberFromDB(
-          tx,
-          phoneNumber
-        );
+      const { primary, secondary } = await getLinkedContactsByPhoneNumber(
+        tx,
+        phoneNumber
+      );
 
       // if primary exists, this means that the phoneNumber already exists in our db and we don not need to do any updates
       if (primary) {
@@ -493,15 +168,232 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
       }
 
       // if primary does not exist, this is an entirely new contact. save it
-      const insertedContact = await this.drizzleContactsRepo.createContactInDB(
-        tx,
-        {
-          phoneNumber,
-          linkPrecedence: "primary",
-        }
-      );
+      const insertedContact = await createContact(tx, {
+        phoneNumber,
+        linkPrecedence: "primary",
+      });
 
       return { primary: insertedContact, secondary: [] };
     });
   }
+}
+
+function containsBothEmailAndPhone(
+  primary: Contact,
+  secondary: Contact[],
+  email: string,
+  phoneNumber: string
+): boolean {
+  return (
+    (primary.email === email ||
+      secondary.filter((c) => c.email === email).length !== 0) &&
+    (primary.phoneNumber === phoneNumber ||
+      secondary.filter((c) => c.phoneNumber === phoneNumber).length !== 0)
+  );
+}
+
+async function getLinkedContactsByPhoneNumber(
+  db: DB,
+  phoneNumber: string
+): Promise<{ primary?: Contact; secondary: Contact[] }> {
+  const fetchedContacts = await getQueryForLinkedContacts(
+    db,
+    subQueryClauseForLinkedContactsByPhoneNumber(db, phoneNumber)
+  );
+
+  const { primary, secondary } = segregatePrimaryAndSecondary(fetchedContacts);
+  const primaryContact = primary.length !== 0 ? primary[0] : undefined;
+
+  return { primary: primaryContact, secondary };
+}
+
+async function getLinkedContactsByPhoneNumberForUpdate(
+  db: DB,
+  phoneNumber: string
+): Promise<{ primary?: Contact; secondary: Contact[] }> {
+  const fetchedContacts = await getQueryForLinkedContacts(
+    db,
+    subQueryClauseForLinkedContactsByPhoneNumber(db, phoneNumber)
+  ).for("update");
+
+  const { primary, secondary } = segregatePrimaryAndSecondary(fetchedContacts);
+  const primaryContact = primary.length !== 0 ? primary[0] : undefined;
+
+  return { primary: primaryContact, secondary };
+}
+
+async function getLinkedContactsByEmail(
+  db: DB,
+  email: string
+): Promise<{ primary?: Contact; secondary: Contact[] }> {
+  const fetchedContacts = await getQueryForLinkedContacts(
+    db,
+    subQueryClauseForLinkedContactsByEmail(db, email)
+  );
+
+  const { primary, secondary } = segregatePrimaryAndSecondary(fetchedContacts);
+  const primaryContact = primary.length !== 0 ? primary[0] : undefined;
+
+  return { primary: primaryContact, secondary };
+}
+
+async function getLinkedContactsByEmailForUpdate(
+  db: DB,
+  email: string,
+  phoneNumber: string
+): Promise<{ primary?: Contact; secondary: Contact[] }> {
+  const fetchedContacts = await getQueryForLinkedContacts(
+    db,
+    subQueryClauseForLinkedContactsByEmail(db, email)
+  ).for("update");
+
+  const { primary, secondary } = segregatePrimaryAndSecondary(fetchedContacts);
+  const primaryContact = primary.length !== 0 ? primary[0] : undefined;
+
+  return { primary: primaryContact, secondary };
+}
+
+async function getLinkedContacts(
+  db: DB,
+  email: string,
+  phoneNumber: string
+): Promise<{ primary: Contact[]; secondary: Contact[] }> {
+  const fetchedContacts = await getQueryForLinkedContacts(
+    db,
+    subQueryClauseForLinkedContacts(db, email, phoneNumber)
+  );
+
+  return segregatePrimaryAndSecondary(fetchedContacts);
+}
+
+async function getLinkedContactsForUpdate(
+  db: DB,
+  email: string,
+  phoneNumber: string
+): Promise<{ primary: Contact[]; secondary: Contact[] }> {
+  const fetchedContacts = await getQueryForLinkedContacts(
+    db,
+    subQueryClauseForLinkedContacts(db, email, phoneNumber)
+  ).for("update");
+
+  return segregatePrimaryAndSecondary(fetchedContacts);
+}
+
+async function createContact(db: DB, contact: NewContact): Promise<Contact> {
+  const now = new Date();
+  const contactToInsert: schemaNewContact = {
+    email: contact.email,
+    phoneNumber: contact.phoneNumber,
+    linkPrecedence: contact.linkPrecedence,
+    linkedId: contact.linkedId,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const insertedContact = await db
+    .insert(contacts)
+    .values(contactToInsert)
+    .returning();
+
+  return mapContact(insertedContact[0]);
+}
+
+async function linkToNewPrimary(
+  db: DB,
+  newPrimary: Contact,
+  contact: Contact
+): Promise<void> {
+  let oldPrimaryId: number;
+  switch (contact.linkPrecedence) {
+    case "secondary":
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      oldPrimaryId = contact.linkedId!;
+      break;
+    case "primary":
+      oldPrimaryId = contact.id;
+      break;
+  }
+
+  await db
+    .update(contacts)
+    .set({
+      linkedId: newPrimary.id,
+      linkPrecedence: "secondary",
+      updatedAt: new Date(),
+    })
+    .where(
+      or(eq(contacts.id, oldPrimaryId), eq(contacts.linkedId, oldPrimaryId))
+    );
+}
+
+function getQueryForLinkedContacts(
+  db: DB,
+  subQueryClause: SQL<unknown> | undefined
+) {
+  const subQuery = db.$with("sq").as(
+    db
+      .select({
+        id: sql<number>`DISTINCT(COALESCE(${contacts.linkedId}, ${contacts.id}))`,
+      })
+      .from(contacts)
+      .where(subQueryClause)
+  );
+
+  const selectFromSubQuery = db.select().from(subQuery);
+
+  return db
+    .with(subQuery)
+    .select()
+    .from(contacts)
+    .where(
+      or(
+        inArray(contacts.id, selectFromSubQuery),
+        inArray(contacts.linkedId, selectFromSubQuery)
+      )
+    );
+}
+
+function subQueryClauseForLinkedContactsByPhoneNumber(
+  db: DB,
+  phoneNumber: string
+) {
+  return eq(contacts.phoneNumber, phoneNumber);
+}
+
+function subQueryClauseForLinkedContactsByEmail(db: DB, email: string) {
+  return eq(contacts.email, email);
+}
+
+function subQueryClauseForLinkedContacts(
+  db: DB,
+  email: string,
+  phoneNumber: string
+) {
+  return or(eq(contacts.email, email), eq(contacts.phoneNumber, phoneNumber));
+}
+
+function segregatePrimaryAndSecondary(contacts: schemaContact[]): {
+  primary: Contact[];
+  secondary: Contact[];
+} {
+  const primary: Contact[] = contacts
+    .filter((c) => c.linkPrecedence === "primary")
+    .map((c) => mapContact(c));
+
+  const secondary: Contact[] = contacts
+    .filter((c) => c.linkPrecedence === "secondary")
+    .map((c) => mapContact(c));
+
+  return { primary, secondary };
+}
+
+function mapContact(obj: schemaContact): Contact {
+  return {
+    id: obj.id,
+    phoneNumber: obj.phoneNumber || undefined,
+    email: obj.email || undefined,
+    linkPrecedence: obj.linkPrecedence,
+    createdAt: obj.createdAt,
+    updatedAt: obj.updatedAt,
+    deletedAt: obj.deletedAt || undefined,
+  };
 }

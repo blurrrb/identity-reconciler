@@ -1,8 +1,5 @@
 import { MiddlewareHandler } from "hono";
-import {
-  DrizzleContactsRepo,
-  DrizzleLinkContactsUnitOfWork,
-} from "../drizzle/contacts";
+import { DrizzleLinkContactsUnitOfWork } from "../drizzle/contacts";
 import { NewNeonPostgres } from "../drizzle/store";
 import { ReconciliationService } from "../reconciliation";
 import Ctx from "./ctx";
@@ -34,9 +31,9 @@ async function constructAppState(env: Env): Promise<AppState> {
   const db = await NewNeonPostgres(env.DATABASE_URL);
   console.log("db connection established");
 
-  const repo = new DrizzleContactsRepo(db);
+  // const repo = new DrizzleContactsRepo(db);
 
-  const uow = new DrizzleLinkContactsUnitOfWork(db, repo);
+  const uow = new DrizzleLinkContactsUnitOfWork(db);
 
   const reconciliationService = new ReconciliationService(uow);
 

@@ -62,23 +62,17 @@
       "indexes": {
         "email_idx": {
           "name": "email_idx",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": false
         },
         "phone_number_idx": {
           "name": "phone_number_idx",
-          "columns": [
-            "phone_number"
-          ],
+          "columns": ["phone_number"],
           "isUnique": false
         },
         "linked_id_idx": {
           "name": "linked_id_idx",
-          "columns": [
-            "linked_id"
-          ],
+          "columns": ["linked_id"],
           "isUnique": false
         }
       },
