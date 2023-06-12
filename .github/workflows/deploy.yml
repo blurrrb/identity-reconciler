@@ -8,13 +8,15 @@ jobs:
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
       - uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: pnpm
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          run_install: true
+      - name: install dependencies
+        run: pnpm install
       - name: publish
         run: pnpm run deploy
