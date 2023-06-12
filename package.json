@@ -10,6 +10,8 @@
     "lint": "eslint",
     "migrations": "drizzle-kit generate:pg --config drizzle.config.ts",
     "migrate": "ts-node ./src/cmd/migrate.ts",
+    "test:unit": "vitest src/ --run",
+    "test:integration": "vitest test/ --run",
     "test": "vitest --run",
     "coverage": "vitest --coverage",
     "test:ui": "vitest --ui"
@@ -26,6 +28,7 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
     "vitest": "^0.32.0",
+    "vitest-mock-extended": "^1.1.3",
     "wrangler": "^3.0.0"
   },
   "dependencies": {

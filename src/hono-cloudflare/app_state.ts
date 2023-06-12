@@ -1,6 +1,6 @@
 import { MiddlewareHandler } from "hono";
 import { DrizzleLinkContactsUnitOfWork } from "../drizzle/contacts";
-import { NewNeonPostgres } from "../drizzle/store";
+import { NewNeonPostgres } from "../drizzle/store/neon";
 import { ReconciliationService } from "../reconciliation";
 import Ctx from "./ctx";
 import Env from "./env";
