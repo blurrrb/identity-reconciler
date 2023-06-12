@@ -80,15 +80,17 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
       if (primary.length === 2) {
         // identify oldest primary
         const [older, younger] =
-          primary[0].createdAt >= primary[1].createdAt
+          primary[0].createdAt <= primary[1].createdAt
             ? [primary[0], primary[1]]
             : [primary[1], primary[0]];
 
         linkToNewPrimary(tx, older, younger);
-
-        younger.linkPrecedence = "secondary";
-        younger.linkedId = older.id;
         secondary.push(younger);
+
+        secondary.forEach((c) => {
+          c.linkPrecedence = "secondary";
+          c.linkedId = older.id;
+        });
 
         return {
           primary: older,
@@ -107,22 +109,18 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
         };
       }
 
-      // one of email or phoneNumber do not exist, create new and link others to new contact
+      // one of email or phoneNumber do not exist, create new and link to old primary
       const insertedContact = await createContact(tx, {
         email,
         phoneNumber,
-        linkPrecedence: "primary",
+        linkPrecedence: "secondary",
+        linkedId: primary[0].id,
       });
 
-      await linkToNewPrimary(tx, insertedContact, primary[0]);
-
-      primary[0].linkPrecedence = "secondary";
-      primary[0].linkedId = insertedContact.id;
-
-      secondary.push(primary[0]);
+      secondary.push(insertedContact);
 
       return {
-        primary: insertedContact,
+        primary: primary[0],
         secondary,
       };
     });
