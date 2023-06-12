@@ -7,7 +7,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: pnpm/action-setup@v2
-      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: true
       - name: check formating
         run: pnpm run format:check
       - name: lint
