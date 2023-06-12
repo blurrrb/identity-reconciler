@@ -9,18 +9,23 @@
     "format:check": "prettier --check .",
     "lint": "eslint",
     "migrations": "drizzle-kit generate:pg --config drizzle.config.ts",
-    "migrate": "ts-node ./src/cmd/migrate.ts"
+    "migrate": "ts-node ./src/cmd/migrate.ts",
+    "test": "vitest --run",
+    "coverage": "vitest --coverage",
+    "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230419.0",
     "@types/node": "^20.2.6",
     "@typescript-eslint/eslint-plugin": "^5.59.9",
     "@typescript-eslint/parser": "^5.59.9",
+    "@vitest/ui": "^0.32.0",
     "drizzle-kit": "^0.18.1",
     "eslint": "^8.42.0",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
+    "vitest": "^0.32.0",
     "wrangler": "^3.0.0"
   },
   "dependencies": {
