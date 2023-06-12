@@ -6,4 +6,5 @@ compatibility_date = "2023-06-10"
 mode = "smart"
 
 [vars]
-DATABASE_URL = "postgres://postgres:postgres@localhost:5432/postgres"
+# Necessary secrets are:
+# - DATABASE_URL

@@ -9,7 +9,10 @@ if (!config.connectionString) {
 }
 
 (async () => {
-  const client = new Client({ connectionString: config.connectionString });
+  const client = new Client({
+    connectionString: config.connectionString,
+    ssl: true,
+  });
   await client.connect();
 
   const db = drizzle(client);
