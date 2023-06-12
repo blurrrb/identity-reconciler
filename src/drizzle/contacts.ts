@@ -70,6 +70,7 @@ export class DrizzleLinkContactsUnitOfWork implements LinkContactsUnitOfWork {
       if (primary.length === 0) {
         const insertedContact = await createContact(tx, {
           email,
+          phoneNumber,
           linkPrecedence: "primary",
         });
 
