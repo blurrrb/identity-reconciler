@@ -56,6 +56,7 @@ All source code is defined under`src`. The top level is utilized for defining co
 - The domain is modelled with domain objects, interfaces and concrete services that do not depend on external packages.
 - All dependencies on external packages are held in their own packages, example, drizzle and hono-cloudflare.
 - **Say you start to hate drizzle and start to like prisma** (believe me, drizzle is amazing, even better than prisma, and this is just an example), **you can simply delete the drizzle folder and create a new folder for prisma**. Implement the domain interfaces, updates `src/hono-cloudflare/app_state.ts` to use the new implementation for contacts repo and link contacts unit of work and you are set. No extra work needed.
+- It is easy to support **express** or a different framework. Create a new folder `src/express`. Write a lean controller to validate the request and pass it on to Reconciliation service. No need to write any business logic. **Yes! Its that simple!**
 - I believe that integration tests should only test the side-effects and not how the side effects are produced, hence, they are put inside their own folder `test/`
 - Unit tests on the other hand should test the internal implementation. So, they belong closer to the actual source code where they can access the un-exported/private bits of the code to actually test the implementation. That is why unit tests are written in-source [https://vitest.dev/guide/in-source.html](https://vitest.dev/guide/in-source.html)
 
