@@ -393,6 +393,7 @@ function mapContact(obj: schemaContact): Contact {
     phoneNumber: obj.phoneNumber || undefined,
     email: obj.email || undefined,
     linkPrecedence: obj.linkPrecedence,
+    linkedId: obj.linkedId || undefined,
     createdAt: obj.createdAt,
     updatedAt: obj.updatedAt,
     deletedAt: obj.deletedAt || undefined,

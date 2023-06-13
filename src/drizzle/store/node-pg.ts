@@ -1,10 +1,11 @@
 import { NodePgDatabase, drizzle } from "drizzle-orm/node-postgres";
-import { Client } from "pg";
+import { Pool } from "pg";
 
 export async function NewNodePostgress(
-  databaseUrl: string
+  databaseUrl: string,
+  ssl = true
 ): Promise<NodePgDatabase> {
-  const client = new Client({ connectionString: databaseUrl, ssl: true });
+  const client = new Pool({ connectionString: databaseUrl, ssl });
   await client.connect();
 
   return drizzle(client);
