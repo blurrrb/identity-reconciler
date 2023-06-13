@@ -4,6 +4,15 @@ on: push
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
     steps:
       - uses: actions/checkout@v2
       - uses: pnpm/action-setup@v2
@@ -20,5 +29,7 @@ jobs:
         run: pnpm run format:check
       - name: lint
         run: pnpm run lint
-      - name: test
-        run: pnpm run test
+      - name: unit test
+        run: pnpm run test:unit
+      - name: integration test
+        run: pnpm run test:integration
