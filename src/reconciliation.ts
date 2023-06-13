@@ -98,13 +98,14 @@ if (import.meta.vitest) {
         updatedAt: new Date(),
       };
 
+      const linkingResponse: LinkingResponse = {
+        primary: contact,
+        secondary: [],
+      };
+
       afterEach(() => mockClear(mockUow));
 
       it("should invoke linkContactsUnitOfWork.linkContacts when both email and phoneNumber are defined", async () => {
-        const linkingResponse: LinkingResponse = {
-          primary: contact,
-          secondary: [],
-        };
         await mockUow.linkContacts
           .calledWith(email, phoneNumber)
           .mockReturnValue(new Promise((r) => r(linkingResponse)));
@@ -121,10 +122,6 @@ if (import.meta.vitest) {
       });
 
       it("should invoke linkContactsUnitOfWork.linkContactsWithEmail when only email is defined", async () => {
-        const linkingResponse: LinkingResponse = {
-          primary: contact,
-          secondary: [],
-        };
         await mockUow.linkContactsByEmail
           .calledWith(email)
           .mockReturnValue(new Promise((r) => r(linkingResponse)));
@@ -138,10 +135,6 @@ if (import.meta.vitest) {
       });
 
       it("should invoke linkContactsUnitOfWork.linkContactsWithPhoneNumber when only email is defined", async () => {
-        const linkingResponse: LinkingResponse = {
-          primary: contact,
-          secondary: [],
-        };
         await mockUow.linkContactsByPhoneNumber
           .calledWith(phoneNumber)
           .mockReturnValue(new Promise((r) => r(linkingResponse)));
@@ -155,6 +148,15 @@ if (import.meta.vitest) {
           phoneNumber
         );
       });
+
+      // it("should throw error when neither email nor phoneNumber are defined", async () => {
+      //   expect(
+      //     await reconciliationService.reconcileLinks(undefined, undefined)
+      //   ).toThrow();
+      //   expect(mockUow.linkContacts).not.toHaveBeenCalled();
+      //   expect(mockUow.linkContactsByEmail).not.toHaveBeenCalled();
+      //   expect(mockUow.linkContactsByPhoneNumber).not.toHaveBeenCalled();
+      // });
     });
   });
 }
