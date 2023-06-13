@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { Contact, LinkContactsUnitOfWork, LinkingResponse } from "./contacts";
 import { mock, mockClear } from "vitest-mock-extended";
+import { Contact, LinkContactsUnitOfWork, LinkingResponse } from "./contacts";
 
 export type ReconciliationResponse = {
   primaryContatctId: number;
@@ -149,14 +149,15 @@ if (import.meta.vitest) {
         );
       });
 
-      // it("should throw error when neither email nor phoneNumber are defined", async () => {
-      //   expect(
-      //     await reconciliationService.reconcileLinks(undefined, undefined)
-      //   ).toThrow();
-      //   expect(mockUow.linkContacts).not.toHaveBeenCalled();
-      //   expect(mockUow.linkContactsByEmail).not.toHaveBeenCalled();
-      //   expect(mockUow.linkContactsByPhoneNumber).not.toHaveBeenCalled();
-      // });
+      it("should throw error when neither email nor phoneNumber are defined", async () => {
+        expect(async () => {
+          await reconciliationService.reconcileLinks(undefined, undefined);
+        }).rejects.toThrowError(ErrInvalidReconciliationRequest);
+
+        expect(mockUow.linkContacts).not.toHaveBeenCalled();
+        expect(mockUow.linkContactsByEmail).not.toHaveBeenCalled();
+        expect(mockUow.linkContactsByPhoneNumber).not.toHaveBeenCalled();
+      });
     });
   });
 }
