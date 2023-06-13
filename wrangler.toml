@@ -1,6 +1,7 @@
 name = "identity-reconciler"
-main = "src/cmd/worker.ts"
+main = "dist/worker.js"
 compatibility_date = "2023-06-10"
+minify = true
 
 [placement]
 mode = "smart"
@@ -8,3 +9,6 @@ mode = "smart"
 [vars]
 # Necessary secrets are:
 # - DATABASE_URL
+
+[build]
+command = "pnpm run build"
