@@ -115,7 +115,18 @@ if (import.meta.vitest) {
             contact.email,
             contact.phoneNumber
           )
-        ).toMatchSnapshot();
+        ).toMatchInlineSnapshot(`
+          {
+            "emails": [
+              "some-email@asdf.com",
+            ],
+            "phoneNumbers": [
+              "+919999999999",
+            ],
+            "primaryContatctId": 1,
+            "secondaryContactIds": [],
+          }
+        `);
         expect(mockUow.linkContacts).toHaveBeenCalledWith(email, phoneNumber);
         expect(mockUow.linkContactsByEmail).not.toHaveBeenCalled();
         expect(mockUow.linkContactsByPhoneNumber).not.toHaveBeenCalled();
@@ -128,7 +139,18 @@ if (import.meta.vitest) {
 
         expect(
           await reconciliationService.reconcileLinks(contact.email, undefined)
-        ).toMatchSnapshot();
+        ).toMatchInlineSnapshot(`
+          {
+            "emails": [
+              "some-email@asdf.com",
+            ],
+            "phoneNumbers": [
+              "+919999999999",
+            ],
+            "primaryContatctId": 1,
+            "secondaryContactIds": [],
+          }
+        `);
         expect(mockUow.linkContactsByEmail).toHaveBeenCalledWith(email);
         expect(mockUow.linkContacts).not.toHaveBeenCalled();
         expect(mockUow.linkContactsByPhoneNumber).not.toHaveBeenCalled();
@@ -141,7 +163,18 @@ if (import.meta.vitest) {
 
         expect(
           await reconciliationService.reconcileLinks(undefined, phoneNumber)
-        ).toMatchSnapshot();
+        ).toMatchInlineSnapshot(`
+          {
+            "emails": [
+              "some-email@asdf.com",
+            ],
+            "phoneNumbers": [
+              "+919999999999",
+            ],
+            "primaryContatctId": 1,
+            "secondaryContactIds": [],
+          }
+        `);
         expect(mockUow.linkContacts).not.toHaveBeenCalled();
         expect(mockUow.linkContactsByEmail).not.toHaveBeenCalled();
         expect(mockUow.linkContactsByPhoneNumber).toHaveBeenCalledWith(
