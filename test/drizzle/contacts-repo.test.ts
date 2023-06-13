@@ -5,10 +5,11 @@ import setupAndGetDbForTesting, {
 } from ".";
 import { DrizzleContactsRepo } from "../../src/drizzle/contacts";
 import { contacts } from "../../src/drizzle/schema";
+import { ContactsRepo } from "../../src/contacts";
 
 describe.concurrent("drizzle contacts repo", async () => {
   const db = await setupAndGetDbForTesting();
-  const contactsRepo = new DrizzleContactsRepo(db);
+  const contactsRepo: ContactsRepo = new DrizzleContactsRepo(db);
 
   describe.concurrent("getLinkedContactsByPhoneNumber", () => {
     describe.concurrent("should return empty response", () => {
