@@ -65,6 +65,11 @@ if (import.meta.vitest) {
 }
 ```
 
+## CI/CD
+
+- All the tests, format check, linting steps are run on each push. Defined here: [https://github.com/blurrrb/identity-reconciler/blob/main/.github/workflows/test.yml](https://github.com/blurrrb/identity-reconciler/blob/main/.github/workflows/test.yml)
+- The deployment pipeline, on the other hand, should be triggered manually and is defined here: [https://github.com/blurrrb/identity-reconciler/blob/main/.github/workflows/deploy.yml](https://github.com/blurrrb/identity-reconciler/blob/main/.github/workflows/deploy.yml). The pipeline will take care of running the migrations.
+
 ## Dev setup
 
 - clone the repository: `git clone https://github.com/blurrrb/identity-reconciler.git`
